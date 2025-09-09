@@ -65,6 +65,43 @@ const mockLeads: Lead[] = [
     createdAt: '2024-01-16T13:20:00Z',
     revenue: 0,
   },
+  {
+    id: '6',
+    name: 'Robert Smith',
+    email: 'robert@manufacturing.com',
+    company: 'Global Manufacturing Inc',
+    phone: '+1-555-0125',
+    industry: 'Manufacturing',
+    score: 89,
+    status: 'qualified',
+    source: 'Trade Show',
+    createdAt: '2024-01-10T08:15:00Z',
+    revenue: 125000,
+  },
+  {
+    id: '7',
+    name: 'Jennifer Davis',
+    email: 'jennifer@retailchain.com',
+    company: 'Retail Chain Solutions',
+    industry: 'Retail',
+    score: 72,
+    status: 'converted',
+    source: 'Google Ads',
+    createdAt: '2024-01-08T14:30:00Z',
+    revenue: 56000,
+  },
+  {
+    id: '8',
+    name: 'Alex Thompson',
+    email: 'alex@edtech.com',
+    company: 'EduTech Innovations',
+    industry: 'Education',
+    score: 81,
+    status: 'qualified',
+    source: 'Content Marketing',
+    createdAt: '2024-01-05T16:20:00Z',
+    revenue: 0,
+  },
 ];
 
 export const leadService = {
@@ -120,6 +157,59 @@ export const leadService = {
       setTimeout(() => {
         resolve({ success: true, leadsCount: 25 });
       }, 3000);
+    });
+  },
+
+  async getIndustries(): Promise<{ id: string; name: string; count: number }[]> {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const industries = [
+          { id: 'technology', name: 'Technology', count: 15 },
+          { id: 'saas', name: 'SaaS', count: 12 },
+          { id: 'healthcare', name: 'Healthcare', count: 8 },
+          { id: 'finance', name: 'Finance', count: 10 },
+          { id: 'consulting', name: 'Consulting', count: 6 },
+          { id: 'manufacturing', name: 'Manufacturing', count: 9 },
+          { id: 'retail', name: 'Retail', count: 7 },
+          { id: 'education', name: 'Education', count: 4 },
+        ];
+        resolve(industries);
+      }, 300);
+    });
+  },
+
+  async getSources(): Promise<string[]> {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const sources = [
+          'Website',
+          'LinkedIn',
+          'Referral',
+          'Cold Email',
+          'Trade Show',
+          'Google Ads',
+          'Content Marketing',
+          'Social Media',
+          'Partner',
+          'Direct Mail'
+        ];
+        resolve(sources);
+      }, 300);
+    });
+  },
+
+  async getCompanySizes(): Promise<{ id: string; label: string; range: string }[]> {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const sizes = [
+          { id: 'startup', label: 'Startup', range: '1-10 employees' },
+          { id: 'small', label: 'Small', range: '11-50 employees' },
+          { id: 'medium', label: 'Medium', range: '51-200 employees' },
+          { id: 'large', label: 'Large', range: '201-1000 employees' },
+          { id: 'enterprise', label: 'Enterprise', range: '1000+ employees' },
+        ];
+        resolve(sizes);
+      }, 300);
     });
   },
 };

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Layout } from '../components/layout/Layout';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
+import { FilterPanel } from '../components/dashboard/FilterPanel';
 import { leadService } from '../services/leadService';
-import { Lead, LeadStats, ChartData } from '../types';
+import { Lead, LeadStats, ChartData, FilterOptions } from '../types';
 import { 
   Users, 
   TrendingUp, 
@@ -12,16 +14,31 @@ import {
   Star,
   Phone,
   Mail,
-  Building
+  Building,
+  Filter,
+  Search,
+  Download,
+  Calendar
 } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export const DashboardPage: React.FC = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [filteredLeads, setFilteredLeads] = useState<Lead[]>([]);
   const [stats, setStats] = useState<LeadStats | null>(null);
   const [topLeads, setTopLeads] = useState<Lead[]>([]);
   const [chartData, setChartData] = useState<ChartData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filters, setFilters] = useState<FilterOptions>({
+    status: [],
+    scoreRange: [0, 100],
+    industry: [],
+    companySize: [],
+    source: [],
+    dateRange: ['', ''],
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,6 +54,7 @@ export const DashboardPage: React.FC = () => {
         setStats(statsData);
         setTopLeads(topLeadsData);
         setChartData(chartDataResponse);
+        setFilteredLeads(leadsData);
       } catch (error) {
         console.error('Failed to fetch dashboard data:', error);
       } finally {
@@ -46,6 +64,76 @@ export const DashboardPage: React.FC = () => {
 
     fetchData();
   }, []);
+
+  // Apply filters and search
+  useEffect(() => {
+    let filtered = [...leads];
+
+    // Apply search filter
+    if (searchTerm) {
+      filtered = filtered.filter(lead =>
+        lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        lead.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        lead.company.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Apply status filter
+    if (filters.status.length > 0) {
+      filtered = filtered.filter(lead => filters.status.includes(lead.status));
+    }
+
+    // Apply score range filter
+    filtered = filtered.filter(lead => 
+      lead.score >= filters.scoreRange[0] && lead.score <= filters.scoreRange[1]
+    );
+
+    // Apply industry filter
+    if (filters.industry.length > 0) {
+      filtered = filtered.filter(lead => filters.industry.includes(lead.industry));
+    }
+
+    // Apply source filter
+    if (filters.source.length > 0) {
+      filtered = filtered.filter(lead => filters.source.includes(lead.source));
+    }
+
+    // Apply date range filter
+    if (filters.dateRange[0] && filters.dateRange[1]) {
+      const startDate = new Date(filters.dateRange[0]);
+      const endDate = new Date(filters.dateRange[1]);
+      filtered = filtered.filter(lead => {
+        const leadDate = new Date(lead.createdAt);
+        return leadDate >= startDate && leadDate <= endDate;
+      });
+    }
+
+    setFilteredLeads(filtered);
+  }, [leads, searchTerm, filters]);
+
+  const handleApplyFilters = () => {
+    setIsFilterOpen(false);
+  };
+
+  const handleResetFilters = () => {
+    setFilters({
+      status: [],
+      scoreRange: [0, 100],
+      industry: [],
+      companySize: [],
+      source: [],
+      dateRange: ['', ''],
+    });
+    setSearchTerm('');
+  };
+
+  const getActiveFiltersCount = () => {
+    return filters.status.length + 
+           filters.industry.length + 
+           filters.companySize.length + 
+           filters.source.length + 
+           (filters.dateRange[0] && filters.dateRange[1] ? 1 : 0);
+  };
 
   if (loading) {
     return (
@@ -76,9 +164,94 @@ export const DashboardPage: React.FC = () => {
   return (
     <Layout>
       <div className="p-6 space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-1">AI-powered lead insights and analytics</p>
+        {/* Header with Search and Filters */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+            <p className="text-gray-600 mt-1">AI-powered lead insights and analytics</p>
+          </div>
+          
+          <div className="flex items-center space-x-4">
+            {/* Search Bar */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search leads..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-64 rounded-lg border border-gray-300 pl-10 pr-4 py-2 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              />
+            </div>
+
+            {/* Filter Button */}
+            <Button
+              variant="outline"
+              onClick={() => setIsFilterOpen(true)}
+              className="relative"
+            >
+              <Filter className="mr-2 h-4 w-4" />
+              Filters
+              {getActiveFiltersCount() > 0 && (
+                <span className="absolute -top-2 -right-2 h-5 w-5 bg-indigo-600 text-white text-xs rounded-full flex items-center justify-center">
+                  {getActiveFiltersCount()}
+                </span>
+              )}
+            </Button>
+
+            {/* Export Button */}
+            <Button variant="outline">
+              <Download className="mr-2 h-4 w-4" />
+              Export
+            </Button>
+          </div>
+        </div>
+
+        {/* Active Filters Display */}
+        {getActiveFiltersCount() > 0 && (
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium text-gray-700">Active Filters:</span>
+                  <div className="flex flex-wrap gap-2">
+                    {filters.status.map(status => (
+                      <span key={status} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                        Status: {status}
+                      </span>
+                    ))}
+                    {filters.industry.map(industry => (
+                      <span key={industry} className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                        Industry: {industry}
+                      </span>
+                    ))}
+                    {filters.source.map(source => (
+                      <span key={source} className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">
+                        Source: {source}
+                      </span>
+                    ))}
+                    {filters.dateRange[0] && filters.dateRange[1] && (
+                      <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">
+                        <Calendar className="inline h-3 w-3 mr-1" />
+                        {filters.dateRange[0]} to {filters.dateRange[1]}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <Button variant="ghost" size="sm" onClick={handleResetFilters}>
+                  Clear All
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Results Summary */}
+        <div className="flex items-center justify-between text-sm text-gray-600">
+          <span>
+            Showing {filteredLeads.length} of {leads.length} leads
+            {searchTerm && ` for "${searchTerm}"`}
+          </span>
         </div>
 
         {/* Stats Cards */}
@@ -212,7 +385,7 @@ export const DashboardPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {leads.map((lead) => (
+                  {filteredLeads.map((lead) => (
                     <tr key={lead.id} className="border-b border-gray-100 hover:bg-gray-50">
                       <td className="py-4 px-4">
                         <div>
@@ -256,6 +429,16 @@ export const DashboardPage: React.FC = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Filter Panel */}
+        <FilterPanel
+          isOpen={isFilterOpen}
+          onClose={() => setIsFilterOpen(false)}
+          filters={filters}
+          onFiltersChange={setFilters}
+          onApplyFilters={handleApplyFilters}
+          onResetFilters={handleResetFilters}
+        />
       </div>
     </Layout>
   );

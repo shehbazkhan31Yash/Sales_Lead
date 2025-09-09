@@ -55,5 +55,19 @@ export interface FilterOptions {
   status: string[];
   scoreRange: [number, number];
   industry: string[];
+  companySize: string[];
+  source: string[];
   dateRange: [string, string];
+}
+
+export interface CompanySize {
+  id: string;
+  label: string;
+  range: string;
+}
+
+export interface Industry {
+  id: string;
+  name: string;
+  count: number;
 }

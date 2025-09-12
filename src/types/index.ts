@@ -71,3 +71,43 @@ export interface Industry {
   name: string;
   count: number;
 }
+
+// new Leads data type
+export interface LeadsData {
+  Lead_ID: string
+  Name: string
+  Company: string
+  Industry: string
+  Region: string
+  Job_Title: string
+  Company_Size: string
+  Email_Opens?: string
+  Web_Visits?: string
+  Campaign_Clicks?: string
+  Past_Purchases: string
+  Converted: string
+  Profile_Score?: number
+  Initial_Lead_Score?: number
+  Conversion_Probability?: number
+  Recommended_Services?: string[]
+  Engagement_Summary?: EngagementSummary,
+  createdAt?: string | Date,
+  Status?: string,
+  Interested_Services? : string[] | string,
+}
+
+export interface ProcessedLead {
+  Lead_ID: string
+  Profile_Score: number
+  Initial_Lead_Score: number
+  Conversion_Probability: number
+  Recommended_Services: any[]
+  Engagement_Summary: EngagementSummary
+}
+
+export interface EngagementSummary {
+  Total_Email_Opens?: number
+  Total_Web_Visits?: number
+  Total_Campaign_Clicks?: number
+  Last_Interaction_Date?: string| Date
+}

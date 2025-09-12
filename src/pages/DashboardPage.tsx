@@ -5,7 +5,7 @@ import { Button } from '../components/ui/Button';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { FilterPanel } from '../components/dashboard/FilterPanel';
 import { leadService } from '../services/leadService';
-import { Lead, LeadStats, ChartData, FilterOptions } from '../types';
+import { Lead, LeadStats, ChartData, FilterOptions, LeadsData } from '../types';
 import { 
   Users, 
   TrendingUp, 
@@ -23,10 +23,10 @@ import {
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export const DashboardPage: React.FC = () => {
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [filteredLeads, setFilteredLeads] = useState<Lead[]>([]);
+  const [leads, setLeads] = useState<LeadsData[]>([]);
+  const [filteredLeads, setFilteredLeads] = useState<LeadsData[]>([]);
   const [stats, setStats] = useState<LeadStats | null>(null);
-  const [topLeads, setTopLeads] = useState<Lead[]>([]);
+  const [topLeads, setTopLeads] = useState<LeadsData[]>([]);
   const [chartData, setChartData] = useState<ChartData[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -49,7 +49,7 @@ export const DashboardPage: React.FC = () => {
           leadService.getTopLeads(5),
           leadService.getChartData(),
         ]);
-
+console.log('leadsData', leadsData, statsData, topLeadsData, chartDataResponse);
         setLeads(leadsData);
         setStats(statsData);
         setTopLeads(topLeadsData);
@@ -72,38 +72,38 @@ export const DashboardPage: React.FC = () => {
     // Apply search filter
     if (searchTerm) {
       filtered = filtered.filter(lead =>
-        lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lead.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lead.company.toLowerCase().includes(searchTerm.toLowerCase())
+        lead['Name'].toLowerCase().includes(searchTerm.toLowerCase()) ||
+        // lead.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        lead['Company'].toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     // Apply status filter
-    if (filters.status.length > 0) {
-      filtered = filtered.filter(lead => filters.status.includes(lead.status));
-    }
+    // if (filters.status.length > 0) {
+    //   filtered = filtered.filter(lead => filters.status.includes(lead.status));
+    // }
 
     // Apply score range filter
     filtered = filtered.filter(lead => 
-      lead.score >= filters.scoreRange[0] && lead.score <= filters.scoreRange[1]
+      lead['Initial_Lead_Score'] && lead['Initial_Lead_Score'] >= filters.scoreRange[0] && lead['Initial_Lead_Score'] <= filters.scoreRange[1]
     );
 
     // Apply industry filter
     if (filters.industry.length > 0) {
-      filtered = filtered.filter(lead => filters.industry.includes(lead.industry));
+      filtered = filtered.filter(lead => filters.industry.includes(lead['Industry']));
     }
 
     // Apply source filter
-    if (filters.source.length > 0) {
-      filtered = filtered.filter(lead => filters.source.includes(lead.source));
-    }
+    // if (filters.source.length > 0) {
+    //   filtered = filtered.filter(lead => filters.source.includes(lead.source));
+    // }
 
     // Apply date range filter
     if (filters.dateRange[0] && filters.dateRange[1]) {
       const startDate = new Date(filters.dateRange[0]);
       const endDate = new Date(filters.dateRange[1]);
       filtered = filtered.filter(lead => {
-        const leadDate = new Date(lead.createdAt);
+        const leadDate = new Date(lead['createdAt'] as string);
         return leadDate >= startDate && leadDate <= endDate;
       });
     }
@@ -152,11 +152,12 @@ export const DashboardPage: React.FC = () => {
   };
 
   const getStatusColor = (status: string) => {
+      //Converted, Interested, Not Interested
     switch (status) {
-      case 'qualified': return 'bg-green-100 text-green-800';
-      case 'converted': return 'bg-blue-100 text-blue-800';
+      case 'Interested': return 'bg-green-100 text-green-800';
+      case 'Converted': return 'bg-blue-100 text-blue-800';
       case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'unqualified': return 'bg-red-100 text-red-800';
+      case 'Not Interested': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -344,19 +345,19 @@ export const DashboardPage: React.FC = () => {
             <CardContent>
               <div className="space-y-4">
                 {topLeads.map((lead) => (
-                  <div key={lead.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div key={lead['Lead_ID']} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                     <div className="flex items-center space-x-4">
-                      <div className={`px-3 py-1 rounded-full text-sm font-medium ${getScoreColor(lead.score)}`}>
-                        {lead.score}
+                      <div className={`px-3 py-1 rounded-full text-sm font-medium ${getScoreColor(lead['Initial_Lead_Score'] ? lead['Initial_Lead_Score'] : 0 )}`}>
+                        {lead['Initial_Lead_Score'] ? lead['Initial_Lead_Score']: 'NA'}
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900">{lead.name}</p>
-                        <p className="text-sm text-gray-500">{lead.company}</p>
+                        <p className="font-medium text-gray-900">{lead['Name']}</p>
+                        <p className="text-sm text-gray-500">{lead['Company']}</p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(lead.status)}`}>
-                        {lead.status}
+                      <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(lead['Status'] ? lead['Status'] : '')}`}>
+                        {lead['Status']}
                       </span>
                     </div>
                   </div>
@@ -378,45 +379,73 @@ export const DashboardPage: React.FC = () => {
                   <tr className="border-b border-gray-200">
                     <th className="text-left py-3 px-4 font-medium text-gray-700">Lead</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700">Company</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Score</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Status</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Source</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">Industry</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">Company Size</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">Job Title</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">Lead Score</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">Conversion Probability (0-1)</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">Profile Score (0-1)</th>
+                    {/* <th className="text-left py-3 px-4 font-medium text-gray-700">Interested Services</th> */}
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">Interested Services/Recommended Services</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
+                  {/* {console.log('filteredLeads', filteredLeads)} */}
                   {filteredLeads.map((lead) => (
-                    <tr key={lead.id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <tr key={lead['Lead_ID']} className="border-b border-gray-100 hover:bg-gray-50">
                       <td className="py-4 px-4">
                         <div>
-                          <p className="font-medium text-gray-900">{lead.name}</p>
-                          <p className="text-sm text-gray-500">{lead.email}</p>
+                          <p className="font-medium text-gray-900">{lead['Name']}</p>
+                          {/* <p className="text-sm text-gray-500">{lead['Name']}</p> */}
                         </div>
                       </td>
                       <td className="py-4 px-4">
                         <div className="flex items-center">
                           <Building className="h-4 w-4 text-gray-400 mr-2" />
-                          <span className="text-gray-900">{lead.company}</span>
+                          <span className="text-gray-900">{lead['Company']}</span>
                         </div>
                       </td>
                       <td className="py-4 px-4">
-                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${getScoreColor(lead.score)}`}>
-                          {lead.score}
+                        <div className="flex items-center">
+                          <Building className="h-4 w-4 text-gray-400 mr-2" />
+                          <span className="text-gray-900">{lead['Industry']}</span>
+                        </div>
+                      </td>
+                      <td className="py-4 px-4">
+                        <div className="flex items-center">
+                          {/* <Building className="h-4 w-4 text-gray-400 mr-2" /> */}
+                          <span className="text-gray-900">{lead['Company_Size']}</span>
+                        </div>
+                      </td>
+                      <td className="py-4 px-4">
+                        <div className="flex items-center">
+                          {/* <Building className="h-4 w-4 text-gray-400 mr-2" /> */}
+                          <span className="text-gray-900">{lead['Job_Title']}</span>
+                        </div>
+                      </td>
+                      <td className="py-4 px-4">
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${getScoreColor(lead['Initial_Lead_Score'] ? lead['Initial_Lead_Score'] : 0)}`}>
+                          {lead['Initial_Lead_Score'] ? lead['Initial_Lead_Score']: 'NA'}
                         </span>
                       </td>
                       <td className="py-4 px-4">
-                        <span className={`px-3 py-1 text-xs rounded-full ${getStatusColor(lead.status)}`}>
-                          {lead.status}
+                        {/* <span className={`px-3 py-1 text-xs rounded-full ${getStatusColor(lead.status)}`}>
+                          {lead['Conversion_Probability']}
+                        </span> */}
+                        <span className={`px-3 py-1 text-xs rounded-full`}>
+                          {lead['Conversion_Probability']}
                         </span>
                       </td>
-                      <td className="py-4 px-4 text-gray-600">{lead.source}</td>
+                      <td className="py-4 px-4 text-gray-600">{lead['Profile_Score']}</td>
+                      <td className="py-4 px-4 text-gray-600">{lead['Interested_Services'] && lead['Interested_Services'].length > 0 ? lead['Interested_Services']: 'NA'}-{lead['Recommended_Services']?.length && lead['Recommended_Services']?.length > 0 ? JSON.stringify(lead['Recommended_Services']): 'NA'}</td>
                       <td className="py-4 px-4">
                         <div className="flex space-x-2">
-                          {lead.phone && (
+                          {/* {lead.phone && (
                             <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded">
                               <Phone className="h-4 w-4" />
                             </button>
-                          )}
+                          )} */}
                           <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded">
                             <Mail className="h-4 w-4" />
                           </button>

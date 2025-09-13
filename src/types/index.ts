@@ -36,6 +36,7 @@ export interface LeadStats {
   conversionRate: number;
   averageScore: number;
   totalRevenue: number;
+  notInterested: number;
 }
 
 export interface ProcessingStatus {
@@ -94,15 +95,19 @@ export interface LeadsData {
   createdAt?: string | Date,
   Status?: string,
   Interested_Services? : string[] | string,
+  Email?: string,
 }
 
 export interface ProcessedLead {
-  Lead_ID: string
-  Profile_Score: number
-  Initial_Lead_Score: number
-  Conversion_Probability: number
-  Recommended_Services: any[]
-  Engagement_Summary: EngagementSummary
+  Lead_ID: string;
+  Profile_Score: number;
+  Initial_Lead_Score: number;
+  Conversion_Probability: number;
+  Recommended_Services: any[];
+  Engagement_Summary: EngagementSummary;
+  Status: string;
+  Interested_Services: string[] | string;
+  Email?: string;
 }
 
 export interface EngagementSummary {

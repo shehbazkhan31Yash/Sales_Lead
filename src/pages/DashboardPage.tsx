@@ -6,10 +6,10 @@ import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { FilterPanel } from '../components/dashboard/FilterPanel';
 import { leadService } from '../services/leadService';
 import { Lead, LeadStats, ChartData, FilterOptions, LeadsData } from '../types';
-import { 
-  Users, 
-  TrendingUp, 
-  DollarSign, 
+import {
+  Users,
+  TrendingUp,
+  DollarSign,
   Target,
   Star,
   Phone,
@@ -18,9 +18,14 @@ import {
   Filter,
   Search,
   Download,
-  Calendar
+  Calendar,
+  MessageCircleHeart,
+  AlertCircleIcon,
+  PercentCircle,
+  CalculatorIcon
 } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import EmailModelPage from './emailModel';
 
 export const DashboardPage: React.FC = () => {
   const [leads, setLeads] = useState<LeadsData[]>([]);
@@ -31,6 +36,8 @@ export const DashboardPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedLeadContent, setSelectedLeadContent] = useState<LeadsData | null>(null);
+  const [openEmailModel, setOpenEmailModel] = useState<boolean>(false);
   const [filters, setFilters] = useState<FilterOptions>({
     status: [],
     scoreRange: [0, 100],
@@ -49,7 +56,6 @@ export const DashboardPage: React.FC = () => {
           leadService.getTopLeads(5),
           leadService.getChartData(),
         ]);
-console.log('leadsData', leadsData, statsData, topLeadsData, chartDataResponse);
         setLeads(leadsData);
         setStats(statsData);
         setTopLeads(topLeadsData);
@@ -68,9 +74,8 @@ console.log('leadsData', leadsData, statsData, topLeadsData, chartDataResponse);
   // Apply filters and search
   useEffect(() => {
     let filtered = [...leads];
-
     // Apply search filter
-    if (searchTerm) {
+    if (searchTerm && searchTerm.trim() !== '') {
       filtered = filtered.filter(lead =>
         lead['Name'].toLowerCase().includes(searchTerm.toLowerCase()) ||
         // lead.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -79,14 +84,14 @@ console.log('leadsData', leadsData, statsData, topLeadsData, chartDataResponse);
     }
 
     // Apply status filter
-    // if (filters.status.length > 0) {
-    //   filtered = filtered.filter(lead => filters.status.includes(lead.status));
-    // }
+    if (filters.status.length > 0) {
+      filtered = filtered.filter((lead: LeadsData) => filters.status.includes(lead['Status'] || ''));
+    }
 
     // Apply score range filter
-    filtered = filtered.filter(lead => 
-      lead['Initial_Lead_Score'] && lead['Initial_Lead_Score'] >= filters.scoreRange[0] && lead['Initial_Lead_Score'] <= filters.scoreRange[1]
-    );
+    // filtered = filtered.filter(lead => 
+    //   lead['Initial_Lead_Score'] && lead['Initial_Lead_Score'] >= filters.scoreRange[0] && lead['Initial_Lead_Score'] <= filters.scoreRange[1]
+    // );
 
     // Apply industry filter
     if (filters.industry.length > 0) {
@@ -107,7 +112,6 @@ console.log('leadsData', leadsData, statsData, topLeadsData, chartDataResponse);
         return leadDate >= startDate && leadDate <= endDate;
       });
     }
-
     setFilteredLeads(filtered);
   }, [leads, searchTerm, filters]);
 
@@ -128,11 +132,11 @@ console.log('leadsData', leadsData, statsData, topLeadsData, chartDataResponse);
   };
 
   const getActiveFiltersCount = () => {
-    return filters.status.length + 
-           filters.industry.length + 
-           filters.companySize.length + 
-           filters.source.length + 
-           (filters.dateRange[0] && filters.dateRange[1] ? 1 : 0);
+    return filters.status.length +
+      filters.industry.length +
+      filters.companySize.length +
+      filters.source.length +
+      (filters.dateRange[0] && filters.dateRange[1] ? 1 : 0);
   };
 
   if (loading) {
@@ -152,7 +156,7 @@ console.log('leadsData', leadsData, statsData, topLeadsData, chartDataResponse);
   };
 
   const getStatusColor = (status: string) => {
-      //Converted, Interested, Not Interested
+    //Converted, Interested, Not Interested
     switch (status) {
       case 'Interested': return 'bg-green-100 text-green-800';
       case 'Converted': return 'bg-blue-100 text-blue-800';
@@ -171,7 +175,7 @@ console.log('leadsData', leadsData, statsData, topLeadsData, chartDataResponse);
             <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
             <p className="text-gray-600 mt-1">AI-powered lead insights and analytics</p>
           </div>
-          
+
           <div className="flex items-center space-x-4">
             {/* Search Bar */}
             <div className="relative">
@@ -256,7 +260,7 @@ console.log('leadsData', leadsData, statsData, topLeadsData, chartDataResponse);
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
           <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -273,7 +277,7 @@ console.log('leadsData', leadsData, statsData, topLeadsData, chartDataResponse);
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-green-100">Qualified</p>
+                  <p className="text-green-100">Interested</p>
                   <p className="text-3xl font-bold">{stats?.qualifiedLeads}</p>
                 </div>
                 <Target className="h-8 w-8 text-green-200" />
@@ -292,15 +296,36 @@ console.log('leadsData', leadsData, statsData, topLeadsData, chartDataResponse);
               </div>
             </CardContent>
           </Card>
-
-          <Card className="bg-gradient-to-r from-pink-500 to-pink-600 text-white">
+          <Card className="bg-gradient-to-r from-green-500 to-pink-600 text-white">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-pink-100">Revenue</p>
-                  <p className="text-3xl font-bold">${stats?.totalRevenue?.toLocaleString()}</p>
+                  <p className="text-pink-100">Conversion</p>
+                  <p className="text-3xl font-bold">{stats?.conversionRate}</p>
                 </div>
-                <DollarSign className="h-8 w-8 text-pink-200" />
+                <CalculatorIcon className="h-8 w-8 text-pink-200" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-gradient-to-r from-blue-500 to-pink-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-pink-100">Average Score</p>
+                  <p className="text-3xl font-bold">{stats?.averageScore}</p>
+                </div>
+                <PercentCircle className="h-8 w-8 text-pink-200" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-gradient-to-r from-red-400 to-red-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-pink-100">No Interested</p>
+                  <p className="text-3xl font-bold">{stats?.notInterested}</p>
+                </div>
+                <AlertCircleIcon className="h-8 w-8 text-pink-200" />
               </div>
             </CardContent>
           </Card>
@@ -347,8 +372,8 @@ console.log('leadsData', leadsData, statsData, topLeadsData, chartDataResponse);
                 {topLeads.map((lead) => (
                   <div key={lead['Lead_ID']} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                     <div className="flex items-center space-x-4">
-                      <div className={`px-3 py-1 rounded-full text-sm font-medium ${getScoreColor(lead['Initial_Lead_Score'] ? lead['Initial_Lead_Score'] : 0 )}`}>
-                        {lead['Initial_Lead_Score'] ? lead['Initial_Lead_Score']: 'NA'}
+                      <div className={`px-3 py-1 rounded-full text-sm font-medium ${getScoreColor(lead['Initial_Lead_Score'] ? lead['Initial_Lead_Score'] : 0)}`}>
+                        {lead['Initial_Lead_Score'] ? lead['Initial_Lead_Score'] : 'NA'}
                       </div>
                       <div>
                         <p className="font-medium text-gray-900">{lead['Name']}</p>
@@ -375,26 +400,26 @@ console.log('leadsData', leadsData, statsData, topLeadsData, chartDataResponse);
           <CardContent>
             <div className="overflow-x-auto">
               <table className="w-full table-auto">
-                <thead>
+                <thead className='bg-gray-50'>
                   <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Lead</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Company</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Industry</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Company Size</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Job Title</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Lead Score</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Conversion Probability (0-1)</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Profile Score (0-1)</th>
-                    {/* <th className="text-left py-3 px-4 font-medium text-gray-700">Interested Services</th> */}
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Interested Services/Recommended Services</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Actions</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 whitespace-nowrap">Name</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 whitespace-nowrap">Company</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 whitespace-nowrap">Industry</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 whitespace-nowrap">Company Size</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 whitespace-nowrap">Job Title</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 whitespace-nowrap">Lead Score</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 whitespace-nowrap">Conversion Probability (0-1)</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 whitespace-nowrap">Profile Score (0-1)</th>
+                    {/* <th className="text-left py-3 px-4 font-medium text-gray-700 whitespace-nowrap">Interested Services</th> */}
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 whitespace-nowrap">Interested Services/Recommended Services</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 whitespace-nowrap">Email</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 whitespace-nowrap">Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {/* {console.log('filteredLeads', filteredLeads)} */}
                   {filteredLeads.map((lead) => (
                     <tr key={lead['Lead_ID']} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="py-4 px-4">
+                      <td className="py-4 px-4 whitespace-nowrap">
                         <div>
                           <p className="font-medium text-gray-900">{lead['Name']}</p>
                           {/* <p className="text-sm text-gray-500">{lead['Name']}</p> */}
@@ -426,7 +451,7 @@ console.log('leadsData', leadsData, statsData, topLeadsData, chartDataResponse);
                       </td>
                       <td className="py-4 px-4">
                         <span className={`px-3 py-1 rounded-full text-sm font-medium ${getScoreColor(lead['Initial_Lead_Score'] ? lead['Initial_Lead_Score'] : 0)}`}>
-                          {lead['Initial_Lead_Score'] ? lead['Initial_Lead_Score']: 'NA'}
+                          {lead['Initial_Lead_Score'] ? lead['Initial_Lead_Score'] : 'NA'}
                         </span>
                       </td>
                       <td className="py-4 px-4">
@@ -438,18 +463,22 @@ console.log('leadsData', leadsData, statsData, topLeadsData, chartDataResponse);
                         </span>
                       </td>
                       <td className="py-4 px-4 text-gray-600">{lead['Profile_Score']}</td>
-                      <td className="py-4 px-4 text-gray-600">{lead['Interested_Services'] && lead['Interested_Services'].length > 0 ? lead['Interested_Services']: 'NA'}-{lead['Recommended_Services']?.length && lead['Recommended_Services']?.length > 0 ? JSON.stringify(lead['Recommended_Services']): 'NA'}</td>
+                      <td className="py-4 px-4 text-gray-600">{lead['Interested_Services'] && lead['Interested_Services'].length > 0 ? lead['Interested_Services'] : 'NA'}-{lead['Recommended_Services']?.length && lead['Recommended_Services']?.length > 0 ? JSON.stringify(lead['Recommended_Services']) : 'NA'}</td>
                       <td className="py-4 px-4">
                         <div className="flex space-x-2">
-                          {/* {lead.phone && (
-                            <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded">
-                              <Phone className="h-4 w-4" />
-                            </button>
-                          )} */}
-                          <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded">
-                            <Mail className="h-4 w-4" />
+                          <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded flex items-center">
+                            <Mail className="h-4 w-4 mr-1" />
+                            <span className="text-gray-900">{lead['Email'] || 'NA'}</span>
                           </button>
                         </div>
+                      </td>
+                      <td className="py-4 px-4">
+                        <Button size="sm" variant="outline" onClick={() => {
+                          setSelectedLeadContent(lead);
+                          setOpenEmailModel(true);
+                        }}>
+                          <MessageCircleHeart className="h-4 w-4" />
+                        </Button>
                       </td>
                     </tr>
                   ))}
@@ -468,6 +497,10 @@ console.log('leadsData', leadsData, statsData, topLeadsData, chartDataResponse);
           onApplyFilters={handleApplyFilters}
           onResetFilters={handleResetFilters}
         />
+        {/* Email Model Dialog */
+          selectedLeadContent &&
+          <EmailModelPage isOpenDialog={openEmailModel} selectedLead={selectedLeadContent} handleclose={(e: boolean) => { setOpenEmailModel(e); setSelectedLeadContent(null) }} />
+        }
       </div>
     </Layout>
   );

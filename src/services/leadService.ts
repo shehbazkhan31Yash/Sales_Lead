@@ -110,10 +110,8 @@ export const leadService = {
       // let finalLeadsData = [];
       const leads = JSON.parse(localStorage.getItem('leads_data') || 'null');
       if (leads) {
-        console.log('Fetching leads from localStorage');
         const processedLeadsData = localStorage.getItem('clean_ai_output');
         if (processedLeadsData) {
-          console.log('Using processed leads data from localStorage');
           localStorage.removeItem('final_leads_data');
           const {per_lead} = JSON.parse(processedLeadsData);
          const finalLeadsData = leads.map((lead: LeadsData, index: number) => {
@@ -150,8 +148,10 @@ export const leadService = {
           convertedLeads: leadsData.filter(lead => lead['Status'] === 'Converted').length,
           conversionRate: (leadsData.filter(lead => lead['Status'] === 'Converted').length / leadsData.length) * 100,
           averageScore: leadsData.reduce((sum, lead) => sum + ( lead['Initial_Lead_Score'] ? lead['Initial_Lead_Score'] : 0), 0) / leadsData.length,
+
           // totalRevenue: leadsData.reduce((sum, lead) => sum + (lead.revenue || 0), 0),
           totalRevenue: 0,
+          notInterested: leadsData.filter(lead => lead['Status'] === 'Not Interested').length,
         };
         resolve(stats);
       }, 600);

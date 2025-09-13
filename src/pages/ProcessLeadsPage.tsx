@@ -38,8 +38,11 @@ export const ProcessLeadsPage: React.FC = () => {
   const navigate = useNavigate();
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    const file = acceptedFiles[0];
-    const multipleFiles = acceptedFiles.length > 1 ? acceptedFiles : null;
+    if(acceptedFiles.length !== 4){
+      alert('Please upload between 4 files, Leads_data, Services_data, PreAccount_data, RunningAccout_data and in CSV format');
+      return;
+    }
+    const multipleFiles = acceptedFiles.length === 4 ? acceptedFiles : null;
     if (multipleFiles) {
       parseCSV(multipleFiles);
     }
@@ -52,7 +55,6 @@ export const ProcessLeadsPage: React.FC = () => {
 
   //=== New code, manage file upload ans process it for extrating different data
   const parseCSV = (files: any[]) => {
-    console.log('file to parse into json', files);
     try {
       if (files && files.length > 0) {
         files.forEach(file => {
@@ -62,10 +64,20 @@ export const ProcessLeadsPage: React.FC = () => {
             complete: (results) => {
               switch (true) {
                 case file.name.startsWith('Leads_data'):
+                  if (results.data.length === 0 || results.data.length > 11) {
+                    alert('Leads data file is empty or having more than 10 records, please upload valid file');
+                    return;
+                  }
                   console.log('leads data file found');
-                  localStorage.removeItem('leads_data');
                   setLeadsData(results.data);
-                  localStorage.setItem('leads_data', JSON.stringify(results.data));
+                  let existingData = localStorage.getItem('leads_data');
+                  let parsedExistingData = existingData ? JSON.parse(existingData) : [];
+                  let uniqueOfNewLeads = results.data.filter((newLead: any) => !parsedExistingData.some((existingLead: any) => existingLead.Lead_ID === newLead.Lead_ID));
+                  if (uniqueOfNewLeads && uniqueOfNewLeads.length > 0) {
+                    console.log('uniqueOfNewLeads', uniqueOfNewLeads, [...parsedExistingData, ...uniqueOfNewLeads]);
+                    localStorage.removeItem('leads_data');
+                    localStorage.setItem('leads_data', JSON.stringify([...parsedExistingData, ...uniqueOfNewLeads]));
+                  }
                   break;
                 case file.name.startsWith('Services_data'):
                   console.log('serice data file found');
@@ -109,6 +121,12 @@ export const ProcessLeadsPage: React.FC = () => {
   useEffect(() => {
     if (leadsData.length && servicesData.length && preAccountsData.length && runningAccountsData.length) {
       console.log('All data files are set, ready to call AI model');
+      setProcessingStatus({
+        step: "extract",
+        progress: 10,
+        message: "Extracting data from file...",
+        isProcessing: true,
+      });
       //call AI model
       setOutput('Processing completed successfully');
       setProcessingStatus({
@@ -119,12 +137,7 @@ export const ProcessLeadsPage: React.FC = () => {
       });
       // requestAI(uploadedFile!);
       runGenAIModel();
-      // setProcessingStatus({
-      //   step: "complete",
-      //   progress: 100,
-      //   message: `Successfully processed ${leadsData.length} leads!`,
-      //   isProcessing: false,
-      // });
+
     }
   }, [leadsData, servicesData, preAccountsData, runningAccountsData])
 
@@ -136,13 +149,37 @@ export const ProcessLeadsPage: React.FC = () => {
         const suffixFixToreove = '\n```';
         let cleanutput = dataOutput.replace(preFixToremove, '').replace(suffixFixToreove, '').trim();
         const parsed = JSON.parse(cleanutput);
-        if (parsed){
-          localStorage.removeItem('clean_ai_output');
-          console.log('parsed output', parsed);
-          localStorage.setItem('clean_ai_output', JSON.stringify(parsed));
+        if (parsed) {
+          // localStorage.removeItem('clean_ai_output');
+          let existingData = localStorage.getItem('clean_ai_output');
+          // if (existingData) {
+            let existingParsed = existingData ? JSON.parse(existingData): { per_lead: [] };
+            //check if exitingparsed is having same as new parsed with Lead_ID
+            let uniqueInparsed = parsed?.per_lead.filter((newLead: any) => !existingParsed?.per_lead.some((existingLead: any) => existingLead?.Lead_ID === newLead.Lead_ID));
+            console.log('uniqueInparsed', uniqueInparsed);
+            if (uniqueInparsed && uniqueInparsed.length > 0) {
+              localStorage.removeItem('clean_ai_output');
+              existingParsed.per_lead = [...existingParsed.per_lead, ...uniqueInparsed];
+              console.log('existingParsed after merging', existingParsed);
+              localStorage.setItem('clean_ai_output', JSON.stringify(existingParsed));
+            }
+          // }
+          setProcessingStatus({
+            step: "complete",
+            progress: 100,
+            message: `Successfully processed ${leadsData.length} leads!`,
+            isProcessing: false,
+          });
+          // console.log('parsed output', parsed);
         }
       } catch (err) {
         console.error('Error parsing AI output JSON:', err);
+        setProcessingStatus({
+          step: "complete",
+          progress: 100,
+          message: `Processed ${leadsData.length} leads with some error!`,
+          isProcessing: false,
+        });
         return null;
       }
     }
@@ -203,53 +240,53 @@ export const ProcessLeadsPage: React.FC = () => {
     multiple: true,
   });
 
-  const processFile = async (file: File) => {
-    setProcessingStatus({
-      step: "extract",
-      progress: 10,
-      message: "Extracting data from file...",
-      isProcessing: true,
-    });
+  // const processFile = async (file: File) => {
+  //   setProcessingStatus({
+  //     step: "extract",
+  //     progress: 10,
+  //     message: "Extracting data from file...",
+  //     isProcessing: true,
+  //   });
 
-    // Simulate processing steps
-    setTimeout(() => {
-      setProcessingStatus({
-        step: "extract",
-        progress: 40,
-        message: "Data extracted successfully. Preparing for AI analysis...",
-        isProcessing: true,
-      });
-    }, 1000);
+  //   // Simulate processing steps
+  //   setTimeout(() => {
+  //     setProcessingStatus({
+  //       step: "extract",
+  //       progress: 40,
+  //       message: "Data extracted successfully. Preparing for AI analysis...",
+  //       isProcessing: true,
+  //     });
+  //   }, 1000);
 
-    setTimeout(() => {
-      setProcessingStatus({
-        step: "analyze",
-        progress: 70,
-        message: "AI is analyzing and scoring leads...",
-        isProcessing: true,
-      });
-    }, 2000);
+  //   setTimeout(() => {
+  //     setProcessingStatus({
+  //       step: "analyze",
+  //       progress: 70,
+  //       message: "AI is analyzing and scoring leads...",
+  //       isProcessing: true,
+  //     });
+  //   }, 2000);
 
-    setTimeout(async () => {
-      try {
-        const result = await leadService.processFile(file);
-        setProcessingStatus({
-          step: "complete",
-          progress: 100,
-          message: `Successfully processed ${result.leadsCount} leads!`,
-          isProcessing: false,
-        });
-      } catch (error) {
-        setProcessingStatus({
-          step: "upload",
-          progress: 0,
-          message: "Processing failed. Please try again.",
-          isProcessing: false,
-        });
-        console.log("Error processing file:", error);
-      }
-    }, 4000);
-  };
+  //   setTimeout(async () => {
+  //     try {
+  //       const result = await leadService.processFile(file);
+  //       setProcessingStatus({
+  //         step: "complete",
+  //         progress: 100,
+  //         message: `Successfully processed ${result.leadsCount} leads!`,
+  //         isProcessing: false,
+  //       });
+  //     } catch (error) {
+  //       setProcessingStatus({
+  //         step: "upload",
+  //         progress: 0,
+  //         message: "Processing failed. Please try again.",
+  //         isProcessing: false,
+  //       });
+  //       console.log("Error processing file:", error);
+  //     }
+  //   }, 4000);
+  // };
 
   const getStepIcon = (step: string) => {
     switch (step) {
@@ -270,6 +307,14 @@ export const ProcessLeadsPage: React.FC = () => {
   //  Testing for more model
 
   const runGenAIModel = async () => {
+    setTimeout(() => {
+      setProcessingStatus({
+        step: "analyze",
+        progress: 70,
+        message: "AI is analyzing and scoring leads...",
+        isProcessing: true,
+      });
+    }, 2000);
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash", generationConfig: { temperature: 0.2, maxOutputTokens: 1500 } });
     const toremoveText = "```json' from start and '```' from end of the json output if any"
     const prompt = `
@@ -462,7 +507,7 @@ export const ProcessLeadsPage: React.FC = () => {
 
                   <div>
                     <h3 className="text-lg font-medium text-gray-900 mb-2">
-                      {isDragActive ? "Drop your file here" : "Upload leads file"}
+                      {isDragActive ? "Drop your file here" : "Upload Required file (*Leads, *Services, *PreAccount, *RunningAccount data)"}
                     </h3>
                     <p className="text-gray-500">
                       Drag and drop your CSV or Excel file, or{" "}
@@ -472,7 +517,7 @@ export const ProcessLeadsPage: React.FC = () => {
 
                   <div className="flex items-center space-x-6 text-sm text-gray-500">
                     <span>✓ CSV files</span>
-                    <span>✓ Excel files (.xlsx, .xls)</span>
+                    {/* <span>✓ Excel files (.xlsx, .xls)</span> */}
                     <span>✓ Up to 10MB</span>
                   </div>
                 </div>

@@ -19,7 +19,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import Papa from "papaparse";
 export const ProcessLeadsPage: React.FC = () => {
   const genAI = new GoogleGenerativeAI(
-    "AIzaSyBwVFeHP6qD6KX348M6yquiu0FtxDBJ9B4"//"AIzaSyDucUyRn5RGVl5FK7BRqre_rBeevA_EbqE"
+    'YOUR API KEY HERE' // Replace with your actual API key
   );
   const [processingStatus, setProcessingStatus] = useState<ProcessingStatus>({
     step: "upload",

@@ -272,12 +272,22 @@ export const DashboardPage: React.FC = () => {
               </div>
             </CardContent>
           </Card>
-
+          <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-purple-100">Converted (Hot)</p>
+                  <p className="text-3xl font-bold">{stats?.convertedLeads}</p>
+                </div>
+                <TrendingUp className="h-8 w-8 text-purple-200" />
+              </div>
+            </CardContent>
+          </Card>
           <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-green-100">Interested</p>
+                  <p className="text-green-100">Interested (Warm)</p>
                   <p className="text-3xl font-bold">{stats?.qualifiedLeads}</p>
                 </div>
                 <Target className="h-8 w-8 text-green-200" />
@@ -285,22 +295,12 @@ export const DashboardPage: React.FC = () => {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-purple-100">Converted</p>
-                  <p className="text-3xl font-bold">{stats?.convertedLeads}</p>
-                </div>
-                <TrendingUp className="h-8 w-8 text-purple-200" />
-              </div>
-            </CardContent>
-          </Card>
+
           <Card className="bg-gradient-to-r from-green-500 to-pink-600 text-white">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-pink-100">Conversion</p>
+                  <p className="text-pink-100">Conversion Rate</p>
                   <p className="text-3xl font-bold">{stats?.conversionRate}</p>
                 </div>
                 <CalculatorIcon className="h-8 w-8 text-pink-200" />
@@ -322,7 +322,7 @@ export const DashboardPage: React.FC = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-pink-100">No Interested</p>
+                  <p className="text-pink-100">No Interested (Cold)</p>
                   <p className="text-3xl font-bold">{stats?.notInterested}</p>
                 </div>
                 <AlertCircleIcon className="h-8 w-8 text-pink-200" />
@@ -383,7 +383,14 @@ export const DashboardPage: React.FC = () => {
                     <div className="flex items-center space-x-2">
                       <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(lead['Status'] ? lead['Status'] : '')}`}>
                         {lead['Status']}
+
                       </span>
+                      <Button size="sm" variant="outline" onClick={() => {
+                        setSelectedLeadContent(lead);
+                        setOpenEmailModel(true);
+                      }}>
+                        <MessageCircleHeart className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -402,15 +409,16 @@ export const DashboardPage: React.FC = () => {
               <table className="w-full table-auto">
                 <thead className='bg-gray-50'>
                   <tr className="border-b border-gray-200">
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 whitespace-nowrap">Lead Id</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700 whitespace-nowrap">Name</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700 whitespace-nowrap">Company</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700 whitespace-nowrap">Industry</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700 whitespace-nowrap">Company Size</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700 whitespace-nowrap">Job Title</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 whitespace-nowrap">Status</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700 whitespace-nowrap">Lead Score</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700 whitespace-nowrap">Conversion Probability (0-1)</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700 whitespace-nowrap">Profile Score (0-1)</th>
-                    {/* <th className="text-left py-3 px-4 font-medium text-gray-700 whitespace-nowrap">Interested Services</th> */}
                     <th className="text-left py-3 px-4 font-medium text-gray-700 whitespace-nowrap">Interested Services/Recommended Services</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700 whitespace-nowrap">Email</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700 whitespace-nowrap">Action</th>
@@ -419,6 +427,12 @@ export const DashboardPage: React.FC = () => {
                 <tbody>
                   {filteredLeads.map((lead) => (
                     <tr key={lead['Lead_ID']} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-4 px-4 whitespace-nowrap">
+                        <div>
+                          <p className="font-medium text-gray-900">{lead['Lead_ID']}</p>
+                          {/* <p className="text-sm text-gray-500">{lead['Name']}</p> */}
+                        </div>
+                      </td>
                       <td className="py-4 px-4 whitespace-nowrap">
                         <div>
                           <p className="font-medium text-gray-900">{lead['Name']}</p>
@@ -447,6 +461,12 @@ export const DashboardPage: React.FC = () => {
                         <div className="flex items-center">
                           {/* <Building className="h-4 w-4 text-gray-400 mr-2" /> */}
                           <span className="text-gray-900">{lead['Job_Title']}</span>
+                        </div>
+                      </td>
+                      <td className="py-4 px-4">
+                        <div className="flex items-center">
+                          {/* <Building className="h-4 w-4 text-gray-400 mr-2" /> */}
+                          <span className="text-gray-900">{lead['Status']}</span>
                         </div>
                       </td>
                       <td className="py-4 px-4">

@@ -2,12 +2,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/
 import { useEffect, useState } from "react";
 import { Button } from "../components/ui/Button";
 import { LeadsData } from "../types";
-import { AlertCircle,Loader } from 'lucide-react';
+import { AlertCircle, Loader } from 'lucide-react';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const EmailModelPage = ({ isOpenDialog, selectedLead, handleclose }: { isOpenDialog: boolean, selectedLead: LeadsData | null, handleclose: any }) => {
     const genAI = new GoogleGenerativeAI(
-        'YOUR API KEY HERE' // Replace with your actual API key
+        "YOUR API KEY"
     );
     const [isOpen, setOpen] = useState<Boolean | undefined>(isOpenDialog);
     const [isProcessingEmail, setIsProcessingEmail] = useState<boolean>(false);
@@ -110,8 +110,10 @@ const EmailModelPage = ({ isOpenDialog, selectedLead, handleclose }: { isOpenDia
                             <div className='font-bold text-lg mb-2'>Lead Details:</div>
                             <table className='table-auto border-collapse border border-gray-300 mt-2'>
                                 <thead>
-                                    <th>Parameteres</th>
-                                    <th>Details / Insights</th>
+                                    <tr>
+                                        <th>Parameteres</th>
+                                        <th>Details / Insights</th>
+                                    </tr>
                                 </thead>
                                 <tbody>
                                     {Object.entries(selectedLead || {}).map(([key, value]) => (

@@ -14,11 +14,12 @@ import { useAuth } from "../../contexts/AuthContext";
 import { cn } from "../../utils/cn";
 
 const navigation = [
+ { name: "Home", href: "/", icon: LayoutDashboard },
  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
- { name: "Process Leads", href: "/process-leads", icon: Upload },
- { name: "All Leads", href: "#", icon: Users },
- { name: "Analytics", href: "#", icon: BarChart3 },
- { name: "Settings", href: "#", icon: Settings },
+ { name: "Analyze Leads", href: "/process-leads", icon: Upload },
+//  { name: "All Leads", href: "#", icon: Users },
+//  { name: "Analytics", href: "#", icon: BarChart3 },
+//  { name: "Settings", href: "#", icon: Settings },
 ];
 
 export const Sidebar: React.FC = () => {

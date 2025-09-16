@@ -106,3 +106,10 @@ The application uses several configuration files:
 ## License
 
 This project is private and proprietary.
+
+## Important for prompt token
+1. Leads: 20-30 records
+2. Campaigns: 10-20 records
+3. Services: 10 -20 records
+4. Pre-Accounts : 10-20 records
+5. Running accounts: 10-20 records

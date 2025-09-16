@@ -9,7 +9,7 @@ export const LandingPage: React.FC = () => {
  return (
   <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
    {/* Hero Section */}
-   <div className="relative overflow-hidden p-16">
+   <div className="relative overflow-hidden p-16 fulscreen-height">
     <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/10 to-purple-600/10" />
     <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
      <div className="text-center">

@@ -1,4 +1,4 @@
-import { Lead, LeadStats, ChartData } from '../types';
+import { Lead, LeadStats, ChartData, LeadsData,ProcessedLead } from '../types';
 
 // Mock data for demonstration
 const mockLeads: Lead[] = [
@@ -105,33 +105,65 @@ const mockLeads: Lead[] = [
 ];
 
 export const leadService = {
-  async getLeads(): Promise<Lead[]> {
+  async getLeads(): Promise<LeadsData[]> {
     return new Promise((resolve) => {
-      setTimeout(() => resolve(mockLeads), 800);
+      // let finalLeadsData = [];
+      const leads = JSON.parse(localStorage.getItem('leads_data') || 'null');
+      if (leads) {
+        const processedLeadsData = localStorage.getItem('clean_ai_output');
+        if (processedLeadsData) {
+          localStorage.removeItem('final_leads_data');
+          const {per_lead} = JSON.parse(processedLeadsData);
+         const finalLeadsData = leads.map((lead: LeadsData, index: number) => {
+            let leadInProcessed = per_lead.find((p: ProcessedLead) => p['Lead_ID'] === lead['Lead_ID']);
+            if (leadInProcessed) {
+              //merge lead data with processed data remove undefined or null values from leadInProcessed
+              //remove Email_Opens, Web_Visits, Campaign_Clicks from leadInProcessed
+              delete lead?.Email_Opens;
+              delete lead?.Web_Visits;
+              delete lead?.Campaign_Clicks;
+              leadInProcessed['Initial_Lead_Score'] = leadInProcessed['Initial_Lead_Score'] * 100;
+              lead = { ...lead, ...leadInProcessed };
+            }
+            //map other fields in processed data from leads data if missing
+            return lead;
+          });
+          console.log('finalLeadsData', finalLeadsData);
+          localStorage.setItem('final_leads_data', JSON.stringify(finalLeadsData));
+          return resolve(finalLeadsData);
+        }
+        return resolve(JSON.parse(leads));
+      }
     });
   },
 
   async getLeadStats(): Promise<LeadStats> {
     return new Promise((resolve) => {
+      const leadsData: LeadsData[] = JSON.parse(localStorage.getItem('final_leads_data') || 'null');
+      //Converted, Interested, Not Interested
       setTimeout(() => {
         const stats: LeadStats = {
-          totalLeads: mockLeads.length,
-          qualifiedLeads: mockLeads.filter(lead => lead.status === 'qualified').length,
-          convertedLeads: mockLeads.filter(lead => lead.status === 'converted').length,
-          conversionRate: (mockLeads.filter(lead => lead.status === 'converted').length / mockLeads.length) * 100,
-          averageScore: mockLeads.reduce((sum, lead) => sum + lead.score, 0) / mockLeads.length,
-          totalRevenue: mockLeads.reduce((sum, lead) => sum + (lead.revenue || 0), 0),
+          totalLeads: leadsData.length,
+          qualifiedLeads: leadsData.filter(lead => lead['Status'] === 'Interested').length,
+          convertedLeads: leadsData.filter(lead => lead['Status'] === 'Converted').length,
+          conversionRate: (leadsData.filter(lead => lead['Status'] === 'Converted').length / leadsData.length) * 100,
+          averageScore: leadsData.reduce((sum, lead) => sum + ( lead['Initial_Lead_Score'] ? lead['Initial_Lead_Score'] : 0), 0) / leadsData.length,
+
+          // totalRevenue: leadsData.reduce((sum, lead) => sum + (lead.revenue || 0), 0),
+          totalRevenue: 0,
+          notInterested: leadsData.filter(lead => lead['Status'] === 'Not Interested').length,
         };
         resolve(stats);
       }, 600);
     });
   },
 
-  async getTopLeads(limit = 10): Promise<Lead[]> {
+  async getTopLeads(limit = 10): Promise<any[]> {
     return new Promise((resolve) => {
+      const leadsData: LeadsData[] = JSON.parse(localStorage.getItem('final_leads_data') || 'null');
       setTimeout(() => {
-        const topLeads = [...mockLeads]
-          .sort((a, b) => b.score - a.score)
+        const topLeads = [...leadsData]
+          .sort((a, b) => (b['Initial_Lead_Score'] || 0) - (  a['Initial_Lead_Score'] || 0))
           .slice(0, limit);
         resolve(topLeads);
       }, 500);
@@ -140,12 +172,13 @@ export const leadService = {
 
   async getChartData(): Promise<ChartData[]> {
     return new Promise((resolve) => {
+      const leadsData: LeadsData[] = JSON.parse(localStorage.getItem('final_leads_data') || 'null');
+      
       setTimeout(() => {
         const data = [
-          { name: 'Qualified', value: 2, color: '#10B981' },
-          { name: 'Converted', value: 1, color: '#6366F1' },
-          { name: 'Pending', value: 1, color: '#F59E0B' },
-          { name: 'Unqualified', value: 1, color: '#EF4444' },
+          { name: 'Interested', value: leadsData.filter(lead=> lead['Status'] === 'Interested').length, color: '#10B981' },
+          { name: 'Converted', value: leadsData.filter(lead=> lead['Status'] === 'Converted').length, color: '#6366F1' },
+          { name: 'Not Interested', value: leadsData.filter(lead=> lead['Status'] === 'Not Interested').length, color: '#EF4444' },
         ];
         resolve(data);
       }, 400);

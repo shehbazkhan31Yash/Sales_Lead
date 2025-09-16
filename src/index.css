@@ -24,3 +24,12 @@
 ::-webkit-scrollbar-thumb:hover {
  background: #555;
 }
+
+.fulscreen-height{
+    min-height: 100vh;
+}
+
+.customstyle{
+    min-width: 510px;
+    min-height: 300px;
+}

@@ -312,7 +312,7 @@ export const DashboardPage: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-pink-100">Average Score</p>
-                  <p className="text-3xl font-bold">{stats?.averageScore}</p>
+                  <p className="text-3xl font-bold">{stats?.averageScore.toFixed(2)}</p>
                 </div>
                 <PercentCircle className="h-8 w-8 text-pink-200" />
               </div>
@@ -471,7 +471,7 @@ export const DashboardPage: React.FC = () => {
                       </td>
                       <td className="py-4 px-4">
                         <span className={`px-3 py-1 rounded-full text-sm font-medium ${getScoreColor(lead['Initial_Lead_Score'] ? lead['Initial_Lead_Score'] : 0)}`}>
-                          {lead['Initial_Lead_Score'] ? lead['Initial_Lead_Score'] : 'NA'}
+                          {lead['Initial_Lead_Score'] ? lead['Initial_Lead_Score'].toFixed(2) : 'NA'}
                         </span>
                       </td>
                       <td className="py-4 px-4">

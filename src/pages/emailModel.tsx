@@ -7,7 +7,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const EmailModelPage = ({ isOpenDialog, selectedLead, handleclose }: { isOpenDialog: boolean, selectedLead: LeadsData | null, handleclose: any }) => {
     const genAI = new GoogleGenerativeAI(
-        "YOUR API KEY"
+        "AIzaSyBwVFeHP6qD6KX348M6yquiu0FtxDBJ9B4" //AIzaSyDucUyRn5RGVl5FK7BRqre_rBeevA_EbqE
     );
     const [isOpen, setOpen] = useState<Boolean | undefined>(isOpenDialog);
     const [isProcessingEmail, setIsProcessingEmail] = useState<boolean>(false);

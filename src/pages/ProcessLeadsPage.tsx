@@ -19,7 +19,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import Papa from "papaparse";
 export const ProcessLeadsPage: React.FC = () => {
   const genAI = new GoogleGenerativeAI(
-    "YOUR API KEY"
+    "AIzaSyBwVFeHP6qD6KX348M6yquiu0FtxDBJ9B4" //AIzaSyDucUyRn5RGVl5FK7BRqre_rBeevA_EbqE
   );
   const [processingStatus, setProcessingStatus] = useState<ProcessingStatus>({
     step: "upload",
@@ -106,17 +106,17 @@ export const ProcessLeadsPage: React.FC = () => {
   }
   //=== End of new code
 
-  useEffect(() => {
-    // const dataToshow = localStorage.getItem('ai_output') || '';
-    // const cleaned = dataToshow?.replace('json\n', '')
-    // const preFixToremove = '```json\n';
-    // const suffixFixToreove = '\n```';
-    // let cleanutput = dataToshow.replace(preFixToremove, '').replace(suffixFixToreove, '').trim();
-    // console.log('dataToshow', cleanutput, dataToshow.split('\n'));
-    // localStorage.setItem('clean_ai_output', cleanutput);
-    // console.log('parsed', JSON.parse(cleanutput));
-    // if (uploadedFile) requestAI(uploadedFile);
-  }, []);
+  // useEffect(() => {
+  //   // const dataToshow = localStorage.getItem('ai_output') || '';
+  //   // const cleaned = dataToshow?.replace('json\n', '')
+  //   // const preFixToremove = '```json\n';
+  //   // const suffixFixToreove = '\n```';
+  //   // let cleanutput = dataToshow.replace(preFixToremove, '').replace(suffixFixToreove, '').trim();
+  //   // console.log('dataToshow', cleanutput, dataToshow.split('\n'));
+  //   // localStorage.setItem('clean_ai_output', cleanutput);
+  //   // console.log('parsed', JSON.parse(cleanutput));
+  //   // if (uploadedFile) requestAI(uploadedFile);
+  // }, []);
 
   useEffect(() => {
     if (leadsData.length && servicesData.length && preAccountsData.length && runningAccountsData.length) {
